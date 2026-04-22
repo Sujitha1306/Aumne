@@ -37,5 +37,6 @@ export const uploadResume = (file) => {
 // Messages
 export const getInbox = () => client.get('/messages/inbox');
 export const getCompanyInbox = () => client.get('/messages/company-inbox');
+export const getUnreadCount = () => client.get('/messages/unread-count');
 export const getMessageThread = (jobId, userId) => client.get(`/messages/thread/${jobId}/${userId}`);
 export const sendMessage = (data) => client.post('/messages/', data);

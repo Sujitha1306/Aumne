@@ -114,6 +114,7 @@ class Message(Base):
     sender_role = Column(String, nullable=False) # 'company' or 'seeker'
     body = Column(Text, nullable=False)
     sent_at = Column(DateTime, default=datetime.utcnow)
+    is_read = Column(Boolean, default=False)  # True once recipient opens the thread
     
     company = relationship("Company", back_populates="messages")
     user = relationship("User", back_populates="messages")

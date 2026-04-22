@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Building, LogOut, User as UserIcon, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getInbox, getCompanyInbox } from '../api/jobs';
+import { getUnreadCount } from '../api/jobs';
 
 export default function Navbar() {
   const { user, profile, logout } = useAuth();
@@ -11,24 +11,13 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!user) return;
-
     const fetchUnread = () => {
-      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-      if (user.role === 'seeker') {
-        getInbox().then(res => {
-          const recent = res.data.filter(m => new Date(m.sent_at).getTime() > cutoff && m.sender_role === 'company');
-          setUnreadCount(recent.length);
-        }).catch(() => {});
-      } else if (user.role === 'company') {
-        getCompanyInbox().then(res => {
-          const recent = res.data.filter(m => new Date(m.sent_at).getTime() > cutoff && m.sender_role === 'seeker');
-          setUnreadCount(recent.length);
-        }).catch(() => {});
-      }
+      getUnreadCount()
+        .then(res => setUnreadCount(res.data.unread_count))
+        .catch(() => {});
     };
-
     fetchUnread();
-    const interval = setInterval(fetchUnread, 60000);
+    const interval = setInterval(fetchUnread, 30000); // poll every 30s
     return () => clearInterval(interval);
   }, [user]);
 

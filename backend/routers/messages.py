@@ -43,6 +43,18 @@ def get_user_inbox(current_user: models.User = Depends(get_current_user), db: Se
         raise HTTPException(status_code=403, detail="Only seekers have an inbox")
     return crud.get_inbox(db, current_user.id)
 
+@router.get("/unread-count")
+def get_unread_count(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Returns unread message count for the badge. Works for both roles."""
+    if current_user.role == "seeker":
+        count = crud.get_unread_seeker_messages(db, current_user.id)
+    elif current_user.role == "company":
+        company = crud.get_company_by_user(db, current_user.id)
+        count = crud.get_unread_company_messages(db, company.id) if company else 0
+    else:
+        count = 0
+    return {"unread_count": count}
+
 @router.get("/company-inbox", response_model=List[schemas.MessageResponse])
 def get_company_inbox(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.role != "company":
@@ -62,4 +74,9 @@ def get_message_thread(job_id: int, user_id: int, current_user: models.User = De
         if not job or not company or job.company_id != company.id:
             raise HTTPException(status_code=403, detail="Not authorized")
 
-    return crud.get_thread(db, job_id, user_id)
+    messages = crud.get_thread(db, job_id, user_id)
+
+    # Mark incoming messages as read for the current reader
+    crud.mark_thread_read(db, job_id, user_id, current_user.role)
+
+    return messages

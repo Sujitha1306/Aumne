@@ -143,11 +143,43 @@ def create_message(db: Session, company_id: int, user_id: int, job_id: int, send
     return db_msg
 
 def get_inbox(db: Session, user_id: int) -> List[models.Message]:
+    """All messages for a seeker (for inbox page display)."""
     return db.query(models.Message).filter(models.Message.user_id == user_id).order_by(models.Message.sent_at.desc()).all()
 
+def get_unread_seeker_messages(db: Session, user_id: int) -> int:
+    """Count of unread company→seeker messages — used for navbar badge."""
+    return db.query(models.Message).filter(
+        models.Message.user_id == user_id,
+        models.Message.sender_role == 'company',
+        models.Message.is_read == False
+    ).count()
+
 def get_company_inbox(db: Session, company_id: int) -> List[models.Message]:
-    """All messages across all jobs owned by this company, newest first."""
+    """All messages across all jobs owned by this company (for inbox page display)."""
     return db.query(models.Message).filter(models.Message.company_id == company_id).order_by(models.Message.sent_at.desc()).all()
 
+def get_unread_company_messages(db: Session, company_id: int) -> int:
+    """Count of unread seeker→company messages — used for navbar badge."""
+    return db.query(models.Message).filter(
+        models.Message.company_id == company_id,
+        models.Message.sender_role == 'seeker',
+        models.Message.is_read == False
+    ).count()
+
 def get_thread(db: Session, job_id: int, user_id: int) -> List[models.Message]:
-    return db.query(models.Message).filter(models.Message.job_id == job_id, models.Message.user_id == user_id).order_by(models.Message.sent_at.asc()).all()
+    messages = db.query(models.Message).filter(
+        models.Message.job_id == job_id,
+        models.Message.user_id == user_id
+    ).order_by(models.Message.sent_at.asc()).all()
+    return messages
+
+def mark_thread_read(db: Session, job_id: int, user_id: int, reader_role: str):
+    """Mark all messages sent by the opposite role as read."""
+    opposite = 'seeker' if reader_role == 'company' else 'company'
+    db.query(models.Message).filter(
+        models.Message.job_id == job_id,
+        models.Message.user_id == user_id,
+        models.Message.sender_role == opposite,
+        models.Message.is_read == False
+    ).update({"is_read": True})
+    db.commit()
