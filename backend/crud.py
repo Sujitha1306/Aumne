@@ -145,5 +145,9 @@ def create_message(db: Session, company_id: int, user_id: int, job_id: int, send
 def get_inbox(db: Session, user_id: int) -> List[models.Message]:
     return db.query(models.Message).filter(models.Message.user_id == user_id).order_by(models.Message.sent_at.desc()).all()
 
+def get_company_inbox(db: Session, company_id: int) -> List[models.Message]:
+    """All messages across all jobs owned by this company, newest first."""
+    return db.query(models.Message).filter(models.Message.company_id == company_id).order_by(models.Message.sent_at.desc()).all()
+
 def get_thread(db: Session, job_id: int, user_id: int) -> List[models.Message]:
     return db.query(models.Message).filter(models.Message.job_id == job_id, models.Message.user_id == user_id).order_by(models.Message.sent_at.asc()).all()

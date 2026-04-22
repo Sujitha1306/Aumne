@@ -43,6 +43,15 @@ def get_user_inbox(current_user: models.User = Depends(get_current_user), db: Se
         raise HTTPException(status_code=403, detail="Only seekers have an inbox")
     return crud.get_inbox(db, current_user.id)
 
+@router.get("/company-inbox", response_model=List[schemas.MessageResponse])
+def get_company_inbox(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role != "company":
+        raise HTTPException(status_code=403, detail="Only companies have a company inbox")
+    company = crud.get_company_by_user(db, current_user.id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+    return crud.get_company_inbox(db, company.id)
+
 @router.get("/thread/{job_id}/{user_id}", response_model=List[schemas.MessageResponse])
 def get_message_thread(job_id: int, user_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.role == "seeker" and current_user.id != user_id:

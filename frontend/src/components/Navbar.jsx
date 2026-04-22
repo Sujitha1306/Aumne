@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Building, LogOut, User as UserIcon, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getInbox } from '../api/jobs';
+import { getInbox, getCompanyInbox } from '../api/jobs';
 
 export default function Navbar() {
   const { user, profile, logout } = useAuth();
@@ -10,14 +10,23 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user || user.role !== 'seeker') return;
+    if (!user) return;
+
     const fetchUnread = () => {
-      getInbox().then(res => {
-        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        const recent = res.data.filter(m => new Date(m.sent_at).getTime() > cutoff && m.sender_role === 'company');
-        setUnreadCount(recent.length);
-      }).catch(() => {});
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+      if (user.role === 'seeker') {
+        getInbox().then(res => {
+          const recent = res.data.filter(m => new Date(m.sent_at).getTime() > cutoff && m.sender_role === 'company');
+          setUnreadCount(recent.length);
+        }).catch(() => {});
+      } else if (user.role === 'company') {
+        getCompanyInbox().then(res => {
+          const recent = res.data.filter(m => new Date(m.sent_at).getTime() > cutoff && m.sender_role === 'seeker');
+          setUnreadCount(recent.length);
+        }).catch(() => {});
+      }
     };
+
     fetchUnread();
     const interval = setInterval(fetchUnread, 60000);
     return () => clearInterval(interval);
@@ -90,6 +99,16 @@ export default function Navbar() {
               <>
                 <Link to="/company/post" className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition shadow-sm">Post Job</Link>
                 <Link to="/company/postings" className="text-gray-600 hover:text-emerald-600 text-sm font-medium px-3 py-2">My Postings</Link>
+
+                {/* Company message badge */}
+                <Link to="/company/postings" className="text-gray-500 hover:text-emerald-600 p-2 relative" title="Messages from applicants">
+                  <Mail className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
                 
                 <div className="relative">
                   <button 
