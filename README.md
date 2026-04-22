@@ -11,7 +11,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-[Live Demo](#) · [API Docs](http://localhost:8000/docs) · [Report Bug](#) · [Request Feature](#)
+[Live Demo](https://drive.google.com/file/d/1rh6ea-blRbtTZyY8dx74Snk542Gf_iju/view?usp=drive_link) · [API Docs](http://localhost:8000/docs)
 
 </div>
 
@@ -617,10 +617,3 @@ The SDK contains one class per router (`JobsApi`, `InternshipsApi`, `Authenticat
 | v1.7 | Company message badge in navbar |
 | v1.8 | Accurate unread count with `is_read` DB tracking |
 
----
-
-<div align="center">
-
-**Built with ❤️ by Sujitha · [Sujitha1306/Aumne](https://github.com/Sujitha1306/Aumne)**
-
-</div>
