@@ -71,62 +71,84 @@ The platform enforces strict role separation between **Job Seekers** and **Compa
 
 ```mermaid
 graph TB
-    subgraph BROWSER["🌐 Browser — React + Vite (Port 5173)"]
+    subgraph BROWSER["Browser — React + Vite  Port 5173"]
         LP[LandingPage]
-        AP[AuthPages<br/>Role Picker + Login/Signup]
-        JP[JobsPage<br/>Listings + Filters]
-        JD[JobDetailPage<br/>Apply Flow]
-        SD[SeekerDashboard<br/>Profile + Applications]
-        CD[CompanyDashboard<br/>Post Jobs + Applicants]
-        IP[InboxPage<br/>Messages]
-        NB[Navbar<br/>Badge + Role Links]
-        AM[ApplyModal<br/>Inline Edit]
+        AP["AuthPages
+Role Picker + Login"]
+        JP["JobsPage
+Listings + Filters"]
+        JD["JobDetailPage
+Apply Flow"]
+        SD["SeekerDashboard
+Profile + Applications"]
+        CD["CompanyDashboard
+Post Jobs + Applicants"]
+        IP["InboxPage
+Messages"]
+        NB["Navbar
+Badge + Role Links"]
+        AM["ApplyModal
+Inline Edit"]
     end
 
-    subgraph AXIOS["📡 Axios HTTP Client"]
-        AC[api/client.js<br/>JWT Bearer Interceptor]
-        AF[api/jobs.js<br/>All API Functions]
+    subgraph AXIOS["Axios HTTP Client"]
+        AC["api/client.js
+JWT Bearer Interceptor"]
+        AF["api/jobs.js
+All API Functions"]
     end
 
-    subgraph API["⚙️ FastAPI — Uvicorn (Port 8000)"]
+    subgraph API["FastAPI — Uvicorn  Port 8000"]
         subgraph ROUTERS["Routers"]
-            R1[/auth]
-            R2[/jobs]
-            R3[/internships]
-            R4[/users]
-            R5[/companies]
-            R6[/messages]
+            R1["auth"]
+            R2["jobs"]
+            R3["internships"]
+            R4["users"]
+            R5["companies"]
+            R6["messages"]
         end
-        subgraph MIDDLEWARE["Middleware / DI"]
-            JWT[JWT Decoder<br/>get_current_user]
-            RG[Role Guards<br/>require_seeker<br/>require_company]
-            DB[DB Session<br/>get_db]
+        subgraph MIDDLEWARE["Middleware and DI"]
+            JWT["JWT Decoder
+get_current_user"]
+            RG["Role Guards
+require_seeker
+require_company"]
+            DBD["DB Session
+get_db"]
         end
         subgraph LOGIC["Business Logic"]
             BL1[Deadline Check]
             BL2[Duplicate Check]
             BL3[Required Fields Validation]
         end
-        CRUD[crud.py<br/>All DB Operations]
-        SCH[schemas.py<br/>Pydantic v2 Validation]
+        CRUD["crud.py
+All DB Operations"]
+        SCH["schemas.py
+Pydantic v2 Validation"]
     end
 
-    subgraph DATA["💾 Data Layer"]
-        DB1[(SQLite<br/>job_portal.db)]
-        FS[/uploads/<br/>Resumes + Logos]
+    subgraph DATA["Data Layer"]
+        DB1[("SQLite
+job_portal.db")]
+        FS["uploads folder
+Resumes + Logos"]
     end
 
-    subgraph SDK["🤖 Python SDK"]
-        SK[job_sdk/<br/>Auto-generated via OpenAPI Generator]
+    subgraph SDK["Python SDK"]
+        SK["job_sdk
+Auto-generated via OpenAPI Generator"]
     end
 
     BROWSER --> AXIOS
     AXIOS --> API
-    API --> CRUD
+    ROUTERS --> MIDDLEWARE
+    MIDDLEWARE --> LOGIC
+    LOGIC --> CRUD
     CRUD --> DB1
     API --> FS
-    API --> SDK
+    API -.-> SDK
 ```
+
 
 ### 🔄 Request Flow
 
