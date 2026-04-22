@@ -25,6 +25,7 @@ export const getInternshipApplicants = (id) => client.get(`/internships/${id}/ap
 
 // Seekers
 export const getMyApplications = () => client.get('/users/applications');
+export const deleteApplication = (id) => client.delete(`/users/applications/${id}`);
 export const getProfile = () => client.get('/users/profile');
 export const updateProfile = (data) => client.put('/users/profile', data);
 export const uploadResume = (file) => {

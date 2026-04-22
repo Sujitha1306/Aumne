@@ -123,6 +123,17 @@ def update_application_status(db: Session, app_id: int, status: str) -> Optional
         db.refresh(app)
     return app
 
+def delete_application(db: Session, app_id: int, user_id: int) -> bool:
+    app = db.query(models.Application).filter(
+        models.Application.id == app_id,
+        models.Application.user_id == user_id
+    ).first()
+    if not app:
+        return False
+    db.delete(app)
+    db.commit()
+    return True
+
 # Messages
 def create_message(db: Session, company_id: int, user_id: int, job_id: int, sender_role: str, body: str) -> models.Message:
     db_msg = models.Message(company_id=company_id, user_id=user_id, job_id=job_id, sender_role=sender_role, body=body)

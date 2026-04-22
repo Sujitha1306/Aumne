@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getMyApplications, uploadResume, updateProfile } from '../api/jobs';
+import { getMyApplications, uploadResume, updateProfile, deleteApplication } from '../api/jobs';
 import { Link } from 'react-router-dom';
 import { CheckCircle, AlertTriangle, UploadCloud, Link as LinkIcon, Edit2, FileText, ChevronRight } from 'lucide-react';
 
@@ -195,6 +195,8 @@ export function ProfilePage() {
 export function MyApplicationsPage() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('inprogress');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     getMyApplications()
@@ -203,11 +205,27 @@ export function MyApplicationsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDelete = async (appId) => {
+    if (!window.confirm('Remove this application? This cannot be undone.')) return;
+    setDeletingId(appId);
+    try {
+      await deleteApplication(appId);
+      setApplications(prev => prev.filter(a => a.id !== appId));
+    } catch (err) {
+      alert('Failed to delete application.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const inProgress = applications.filter(a => a.status === 'under_review');
+  const allOther = applications.filter(a => a.status !== 'under_review');
+
   const getStatusBadge = (status) => {
     switch(status) {
       case 'under_review': return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold uppercase tracking-wider">Under Review</span>;
       case 'shortlisted': return <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold uppercase tracking-wider">Shortlisted</span>;
-      case 'hired': return <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider">Hired</span>;
+      case 'hired': return <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider">Hired 🎉</span>;
       case 'rejected': return <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold uppercase tracking-wider">Rejected</span>;
       default: return null;
     }
@@ -216,58 +234,115 @@ export function MyApplicationsPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-8 tracking-tight">My Applications</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-6 tracking-tight">My Applications</h1>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200 mb-6">
+          {[
+            { key: 'inprogress', label: 'In Progress', count: inProgress.length },
+            { key: 'all', label: 'All Applications', count: applications.length },
+          ].map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${tab === key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              {label} <span className="ml-1 text-xs opacity-70">({count})</span>
+            </button>
+          ))}
+        </div>
 
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 space-y-4">
-            <div className="h-6 w-full animate-pulse bg-gray-200 rounded"></div>
-            <div className="h-6 w-full animate-pulse bg-gray-200 rounded"></div>
-            <div className="h-6 w-full animate-pulse bg-gray-200 rounded"></div>
+            {[1,2,3].map(n => <div key={n} className="h-6 w-full animate-pulse bg-gray-200 rounded" />)}
           </div>
-        ) : applications.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No applications yet</h3>
-            <p className="text-gray-500 mb-6">Start browsing to find your next opportunity.</p>
-            <Link to="/jobs" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition shadow-sm inline-block">
-              Browse Jobs
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Role</th>
-                    <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Company</th>
-                    <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Applied Date</th>
-                    <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Status</th>
-                    <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {applications.map(app => (
-                    <tr key={app.id} className="hover:bg-gray-50 transition">
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-gray-900">{app.job_title}</div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{app.company_name}</td>
-                      <td className="py-4 px-6 text-gray-500 text-sm">
-                        {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td className="py-4 px-6">{getStatusBadge(app.status)}</td>
-                      <td className="py-4 px-6">
-                        <Link to={`/jobs/${app.job_id}`} className="text-blue-600 hover:text-blue-800 p-2 rounded hover:bg-blue-50 inline-block transition">
-                          <ChevronRight className="h-5 w-5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        ) : tab === 'inprogress' ? (
+          inProgress.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+              <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No pending applications</h3>
+              <p className="text-gray-500 mb-6">All your submitted applications are reviewed.</p>
+              <Link to="/jobs" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition shadow-sm inline-block">
+                Browse Jobs
+              </Link>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              {inProgress.map(app => (
+                <div key={app.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="font-bold text-gray-900 text-lg">{app.job_title}</p>
+                    <p className="text-gray-500 text-sm">{app.company_name}</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Applied: {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                    <div className="mt-2">{getStatusBadge(app.status)}</div>
+                  </div>
+                  <div className="flex gap-3 shrink-0">
+                    <Link
+                      to={`/jobs/${app.job_id}`}
+                      className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-300 px-4 py-2 rounded-lg hover:bg-blue-50 transition"
+                    >
+                      <ChevronRight className="h-4 w-4" /> Continue
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(app.id)}
+                      disabled={deletingId === app.id}
+                      className="flex items-center gap-1.5 text-sm font-semibold text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
+                    >
+                      {deletingId === app.id ? '...' : '✕ Delete'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          applications.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+              <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No applications yet</h3>
+              <p className="text-gray-500 mb-6">Start browsing to find your next opportunity.</p>
+              <Link to="/jobs" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition shadow-sm inline-block">
+                Browse Jobs
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Role</th>
+                      <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Company</th>
+                      <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Applied Date</th>
+                      <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="py-4 px-6 font-semibold text-sm text-gray-700 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {applications.map(app => (
+                      <tr key={app.id} className="hover:bg-gray-50 transition">
+                        <td className="py-4 px-6">
+                          <div className="font-bold text-gray-900">{app.job_title}</div>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">{app.company_name}</td>
+                        <td className="py-4 px-6 text-gray-500 text-sm">
+                          {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                        <td className="py-4 px-6">{getStatusBadge(app.status)}</td>
+                        <td className="py-4 px-6">
+                          <Link to={`/jobs/${app.job_id}`} className="text-blue-600 hover:text-blue-800 p-2 rounded hover:bg-blue-50 inline-block transition">
+                            <ChevronRight className="h-5 w-5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
         )}
       </div>
     </div>

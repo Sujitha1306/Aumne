@@ -200,6 +200,18 @@ export default function JobDetailPage() {
                     </div>
                   </section>
                 )}
+
+                {job.additional_info && (
+                  <section>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Additional Information</h3>
+                    <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 flex gap-4">
+                      <Info className="h-6 w-6 text-amber-500 flex-shrink-0" />
+                      <div className="text-gray-700">
+                        {job.additional_info.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
+                      </div>
+                    </div>
+                  </section>
+                )}
               </div>
             </div>
           </div>
@@ -265,10 +277,32 @@ export default function JobDetailPage() {
 
               <div className="pt-6 border-t border-gray-100">
                 <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Building className="h-5 w-5 text-gray-400" /> About Company</h4>
-                <p className="font-semibold text-gray-800 mb-1">{job.company_name}</p>
-                <Link to={`/companies/${job.company_id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
-                  View full profile <ExternalLink className="h-3 w-3" />
-                </Link>
+                <p className="font-semibold text-gray-800 mb-3">{job.company_name}</p>
+                <div className="flex flex-col gap-2">
+                  {job.company_website ? (
+                    <a
+                      href={job.company_website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1.5 hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> View Full Profile
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-sm">No website provided</span>
+                  )}
+                  {job.company_linkedin_url && (
+                    <a
+                      href={job.company_linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 hover:text-blue-800 text-sm font-medium flex items-center gap-1.5 hover:underline"
+                    >
+                      <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                      LinkedIn Page
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -64,6 +64,7 @@ class Job(Base):
     availability_required = Column(String)
     interview_start = Column(DateTime)
     additional_info = Column(Text)
+    required_fields = Column(Text, default="[]")  # JSON array e.g. ["phone", "linkedin_url"]
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

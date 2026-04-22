@@ -6,9 +6,15 @@ import schemas, crud, models
 from database import get_db
 from auth import require_company, require_seeker, get_current_user_optional
 
+import json
+
 router = APIRouter()
 
 def serialize_job(job: models.Job) -> dict:
+    try:
+        req_fields = json.loads(job.required_fields or "[]")
+    except Exception:
+        req_fields = []
     job_dict = {
         "id": job.id, "company_id": job.company_id, "title": job.title, "type": job.type, 
         "work_mode": job.work_mode, "employment_type": job.employment_type, "duration": job.duration,
@@ -21,7 +27,10 @@ def serialize_job(job: models.Job) -> dict:
         "applicant_count": len(job.applications),
         "company_name": job.company.company_name if job.company else "",
         "company_logo": job.company.logo_url if job.company else None,
-        "posted_ago": f"{(datetime.utcnow() - job.created_at).days} days ago" if job.created_at else "Recently"
+        "company_website": job.company.website if job.company else None,
+        "company_linkedin_url": job.company.linkedin_url if job.company else None,
+        "posted_ago": f"{(datetime.utcnow() - job.created_at).days} days ago" if job.created_at else "Recently",
+        "required_fields": req_fields,
     }
     return job_dict
 
@@ -34,8 +43,9 @@ def create_new_job(job_in: schemas.JobCreate, db: Session = Depends(get_db), cur
     if crud.check_duplicate_posting(db, company.id, job_in.title, "job"):
         raise HTTPException(status_code=409, detail="Duplicate posting for this title and type exists")
         
-    job_data = job_in.dict(exclude={"skills", "perks"})
+    job_data = job_in.dict(exclude={"skills", "perks", "required_fields"})
     job_data["type"] = "job"
+    job_data["required_fields"] = json.dumps(job_in.required_fields)
     
     job = crud.create_job(db, company.id, job_data, job_in.skills, job_in.perks)
     return serialize_job(job)

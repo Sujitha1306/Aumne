@@ -59,6 +59,7 @@ class JobCreate(BaseModel):
     additional_info: Optional[str] = None
     skills: List[str] = []
     perks: List[str] = []
+    required_fields: List[str] = []
 
 class JobResponse(BaseModel):
     id: int
@@ -85,7 +86,10 @@ class JobResponse(BaseModel):
     applicant_count: int = 0
     company_name: str = ""
     company_logo: Optional[str] = None
+    company_website: Optional[str] = None
+    company_linkedin_url: Optional[str] = None
     posted_ago: str = ""
+    required_fields: List[str] = []
     model_config = ConfigDict(from_attributes=True)
 
 class ApplicationCreate(BaseModel):

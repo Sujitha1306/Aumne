@@ -43,3 +43,9 @@ def get_my_applications(current_user: models.User = Depends(require_seeker), db:
         r.company_name = app.job.company.company_name
         result.append(r)
     return result
+
+@router.delete("/applications/{app_id}", status_code=204)
+def delete_my_application(app_id: int, current_user: models.User = Depends(require_seeker), db: Session = Depends(get_db)):
+    deleted = crud.delete_application(db, app_id, current_user.id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Application not found or not yours")

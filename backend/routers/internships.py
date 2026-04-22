@@ -18,8 +18,9 @@ def create_new_internship(job_in: schemas.JobCreate, db: Session = Depends(get_d
     if crud.check_duplicate_posting(db, company.id, job_in.title, "internship"):
         raise HTTPException(status_code=409, detail="Duplicate posting for this title and type exists")
         
-    job_data = job_in.dict(exclude={"skills", "perks"})
+    job_data = job_in.dict(exclude={"skills", "perks", "required_fields"})
     job_data["type"] = "internship"
+    job_data["required_fields"] = __import__("json").dumps(job_in.required_fields)
     
     job = crud.create_job(db, company.id, job_data, job_in.skills, job_in.perks)
     return serialize_job(job)

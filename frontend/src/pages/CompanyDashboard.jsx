@@ -153,6 +153,7 @@ export function PostJobPage() {
     additional_info: '',
     skills: [],
     perks: [],
+    required_fields: [],
   });
   const [skillInput, setSkillInput] = useState('');
 
@@ -169,6 +170,12 @@ export function PostJobPage() {
 
   const togglePerk = (p) => {
     set('perks', form.perks.includes(p) ? form.perks.filter(x => x !== p) : [...form.perks, p]);
+  };
+
+  const toggleRequiredField = (f) => {
+    set('required_fields', form.required_fields.includes(f)
+      ? form.required_fields.filter(x => x !== f)
+      : [...form.required_fields, f]);
   };
 
   const handleSubmit = async () => {
@@ -372,7 +379,7 @@ export function PostJobPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Perks & Benefits</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Perks & Benefits</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {PERKS_LIST.map(p => (
                     <label key={p} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition">
@@ -383,6 +390,34 @@ export function PostJobPage() {
                         className="h-4 w-4 text-blue-600 rounded"
                       />
                       <span className="text-sm text-gray-700">{p}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Required applicant details */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Required Applicant Details
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Name, email, and resume are always collected. Select additional info you need from applicants:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { key: 'phone', label: '📞 Phone Number' },
+                    { key: 'linkedin_url', label: '🔗 LinkedIn Profile' },
+                    { key: 'availability', label: '📅 Availability' },
+                    { key: 'is_fresher', label: '🎓 Experience Level' },
+                  ].map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-indigo-50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={form.required_fields.includes(key)}
+                        onChange={() => toggleRequiredField(key)}
+                        className="h-4 w-4 text-indigo-600 rounded"
+                      />
+                      <span className="text-sm text-gray-700">{label}</span>
                     </label>
                   ))}
                 </div>
