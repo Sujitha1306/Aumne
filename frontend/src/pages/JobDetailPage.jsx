@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { getJob, getInternship, applyJob, applyInternship } from '../api/jobs';
+import { getJob, getInternship, applyJob, applyInternship, getMyApplications } from '../api/jobs';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, MapPin, IndianRupee, Clock, Users, Building, ExternalLink, Calendar, Info, Lock } from 'lucide-react';
 import ApplyModal from '../components/ApplyModal';
@@ -16,6 +16,7 @@ export default function JobDetailPage() {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applying, setApplying] = useState(false);
   const [applyMessage, setApplyMessage] = useState(null);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   const { user } = useAuth();
 
@@ -24,6 +25,15 @@ export default function JobDetailPage() {
       try {
         const res = isInternship ? await getInternship(id) : await getJob(id);
         setJob(res.data);
+
+        // Check if seeker has already applied
+        if (user && user.role === 'seeker') {
+          try {
+            const appRes = await getMyApplications();
+            const applied = appRes.data.some(a => a.job_id === parseInt(id));
+            setAlreadyApplied(applied);
+          } catch { /* ignore */ }
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -31,7 +41,7 @@ export default function JobDetailPage() {
       }
     };
     fetchDetail();
-  }, [id, isInternship]);
+  }, [id, isInternship, user]);
 
   const handleApply = async () => {
     setApplying(true);
@@ -41,6 +51,7 @@ export default function JobDetailPage() {
       else await applyJob(job.id);
       
       setApplyMessage({ type: 'success', text: '✅ Application submitted successfully!' });
+      setAlreadyApplied(true); // immediately reflect the change
       setTimeout(() => setShowApplyModal(false), 2000);
     } catch (err) {
       setApplyMessage({ 
@@ -228,6 +239,10 @@ export default function JobDetailPage() {
                   <button disabled className="w-full bg-gray-100 text-gray-400 font-bold py-3.5 rounded-xl cursor-not-allowed">
                     Companies cannot apply
                   </button>
+                ) : alreadyApplied ? (
+                  <div className="w-full bg-emerald-50 border-2 border-emerald-300 text-emerald-700 font-bold py-3.5 rounded-xl text-center flex items-center justify-center gap-2">
+                    ✅ Already Applied
+                  </div>
                 ) : !canApply ? (
                   <button disabled className="w-full bg-gray-200 text-gray-500 font-bold py-3.5 rounded-xl cursor-not-allowed border border-gray-300">
                     Applications Closed
