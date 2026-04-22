@@ -36,8 +36,7 @@
 ---
 
 ## 🎯 About the Project
-
-**Aumne** is a production-grade Job Portal platform built as a full-stack application with a FastAPI backend and a React (Vite) SPA frontend. It supports the complete hiring lifecycle — from job discovery and application to applicant management, status tracking, and real-time in-app messaging.
+Job Portal platform built as a full-stack application with a FastAPI backend and a React (Vite) SPA frontend. It supports the complete hiring lifecycle — from job discovery and application to applicant management, status tracking, and real-time in-app messaging.
 
 The platform enforces strict role separation between **Job Seekers** and **Companies** and implements two core business rules at the database, API, and UI layers: **duplicate application prevention** and **deadline enforcement**.
 
