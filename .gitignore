@@ -44,3 +44,8 @@ backend/uploads/*
 
 # Agent config (internal AI tooling)
 .agent/
+
+# Reference-only documentation (not for version control)
+DESIGN_ARCHITECTURE.md
+PRD_ENHANCED.md
+TECHNICAL_STACK_V2.md
